@@ -52,9 +52,9 @@ func New(t *testing.T) (context.Context, *Suite) {
 func configPath() string {
 	const key = "CONFIG_PATH"
 
-	//if v := os.Getenv(key); v != "" {
-	//	return v
-	//}
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
 
 	return "../config/local_tests.yaml"
 }
