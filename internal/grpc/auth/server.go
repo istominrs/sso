@@ -2,11 +2,14 @@ package auth
 
 import (
 	"context"
+	"errors"
 	ssov1 "github.com/GolangLessons/protos/gen/go/sso"
 	"github.com/go-playground/validator/v10"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"sso/internal/repository"
+	"sso/internal/services/auth"
 )
 
 const (
@@ -34,8 +37,7 @@ type Auth interface {
 
 type serverAPI struct {
 	ssov1.UnimplementedAuthServer
-	auth Auth
-	// TODO: remake
+	auth      Auth
 	validator *validator.Validate
 }
 
@@ -56,7 +58,10 @@ func (s *serverAPI) Login(
 
 	token, err := s.auth.Login(ctx, req.GetEmail(), req.GetPassword(), int(req.GetAppId()))
 	if err != nil {
-		// TODO: ...
+		if errors.Is(err, auth.ErrInvalidCredentials) {
+			return nil, status.Error(codes.InvalidArgument, "invalid email or password")
+		}
+
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 
@@ -75,7 +80,10 @@ func (s *serverAPI) Register(
 
 	userID, err := s.auth.RegisterNewUser(ctx, req.GetEmail(), req.GetPassword())
 	if err != nil {
-		// TODO: ...
+		if errors.Is(err, repository.ErrUserExists) {
+			return nil, status.Error(codes.AlreadyExists, "user already exists")
+		}
+
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 
@@ -94,7 +102,10 @@ func (s *serverAPI) IsAdmin(
 
 	isAdmin, err := s.auth.IsAdmin(ctx, req.GetUserId())
 	if err != nil {
-		// TODO: ...
+		if errors.Is(err, repository.ErrUserNotFound) {
+			return nil, status.Error(codes.NotFound, "user not found")
+		}
+
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 
