@@ -3,6 +3,8 @@ package app
 import (
 	"log/slog"
 	grpcapp "sso/internal/app/grpc"
+	"sso/internal/repository/postgres"
+	"sso/internal/services/auth"
 	"time"
 )
 
@@ -16,7 +18,14 @@ func New(
 	postgresDSN string,
 	tokenTTL time.Duration,
 ) *App {
-	grpcApp := grpcapp.New(log, grpcPort)
+	repository, err := postgres.New(postgresDSN)
+	if err != nil {
+		panic(err)
+	}
+
+	authService := auth.New(log, repository, repository, repository, tokenTTL)
+
+	grpcApp := grpcapp.New(log, authService, grpcPort)
 
 	return &App{
 		GRPCSrv: grpcApp,

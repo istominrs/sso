@@ -143,7 +143,22 @@ func (a *Auth) RegisterNewUser(ctx context.Context, email string, pass string) (
 
 // IsAdmin checks if user is admin.
 func (a *Auth) IsAdmin(ctx context.Context, userID int64) (bool, error) {
-	panic("implement me")
+	const op = "auth.IsAdmin"
+
+	log := a.log.With(slog.String("op", op))
+
+	log.Info("checking if user is admin")
+
+	isAdmin, err := a.userProvider.IsAdmin(ctx, userID)
+	if err != nil {
+		a.log.Error("failed to check if user is admin", sl.Err(err))
+
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+
+	log.Info("checked if user is admin", slog.Bool("is_admin", isAdmin))
+
+	return isAdmin, nil
 }
 
 // Logout logs out the user by invalidating the provided token.

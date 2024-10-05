@@ -39,9 +39,10 @@ type serverAPI struct {
 	validator *validator.Validate
 }
 
-func Register(gRPC *grpc.Server) {
+func Register(gRPC *grpc.Server, auth Auth) {
 	ssov1.RegisterAuthServer(gRPC, &serverAPI{
 		validator: validator.New(),
+		auth:      auth,
 	})
 }
 
